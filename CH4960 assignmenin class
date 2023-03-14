@@ -1,0 +1,131 @@
+# sri
+import numpy as np
+import matplotlib.pyplot as plt
+# Microscopic crossections for U238
+sigma_f_thermal_u238=0
+sigma_c_thermal_u238=2.72
+sigma_s_thermal_u238=8.3
+sigma_a_thermal_u238=sigma_f_thermal_u238+sigma_c_thermal_u238
+sigma_a_fast_u238=2.68
+sigma_f_fast_u238=2.68
+sigma_s_fast_u238=4.30
+sigma_c_fast_u238=sigma_a_fast_u238-sigma_f_fast_u238
+Eta_u238=0.0084
+
+# Microscopic crossections for U235
+sigma_f_thermal_u235=579
+sigma_c_thermal_u235=101
+sigma_s_thermal_u235=10
+sigma_a_thermal_u235=sigma_f_thermal_u235+sigma_c_thermal_u235
+sigma_a_fast_u235=530
+sigma_f_fast_u235=1.02
+sigma_s_fast_u235=1.02
+sigma_c_fast_u235=sigma_a_fast_u235-sigma_f_fast_u235
+Eta_u235=0.0085
+
+v_u235=2.42
+v_u238=2.9
+# Microscopic cross sections for oxygen
+sigma_s_thermal_o=3.8
+sigma_c_thermal_o=0.0002
+sigma_c_fast_o=0.19
+sigma_s_fast_o=4.2
+Eta_o=0.121
+
+# water microscopic crossections
+sigma_c_thermal_h2o=0.66
+sigma_s_thermal_h2o=50
+Eta_h2o=0.920
+
+# sodium microscopic crossection
+sigma_c_fast_na=0.53
+sigma_s_fast_na=4.1
+Eta_na=0.0844
+
+# D2o microscopic crossections
+sigma_c_thermal_d2o=0.001
+sigma_s_thermal_d2o=25
+Eta_d2o=0.509
+
+# Defining masses of individual substances in grams
+M_UraniumDioxide= 233170
+M_H20=30830
+M_Zircaloy=25765
+M_Sodium=25288
+
+# Microscopic crossections of Zr
+sigma_s_thermal_zr=8
+sigma_c_thermal_zr=0.182
+sigma_c_fast_zr=0.18
+sigma_s_fast_zr=4.6
+Eta_zr=0.0218
+
+
+# Molar masses
+M_uo2=270
+M_h20=18
+M_zr=91
+N_A=6.022*1e23
+M_d20=20
+M_na=23
+
+# Calculating No of various species
+N_Uo2=(M_UraniumDioxide/M_uo2)*N_A
+N_h20=(M_H20/M_h20)*N_A
+N_d20=(M_H20/M_d20)*N_A
+N_zr=(M_Zircaloy/M_zr)*N_A
+N_Uranium=N_Uo2
+N_O= N_Uo2*2
+N_Na=(M_Sodium/M_na)*N_A
+# Parametrising the ratio of u235:u238 as 1:x
+x=139
+N_U235 = N_Uranium/(x+1)
+N_U238 = x*N_U235
+
+Number_density=[N_U235,N_U238,N_O,N_h20,N_zr]
+Number_density_F=[N_U235,N_U238,N_O,N_Na,N_zr]
+Eta=[Eta_u235,Eta_u238,Eta_o,Eta_h2o,Eta_zr]
+Eta_F=[Eta_u235,Eta_u238,Eta_o,Eta_na,Eta_zr]
+sigmact=[sigma_a_thermal_u235,sigma_a_thermal_u238,sigma_c_thermal_o,sigma_c_thermal_h2o,sigma_c_thermal_zr]
+sigmacf=[sigma_a_fast_u235,sigma_a_fast_u238,sigma_c_fast_o,sigma_c_fast_na,sigma_c_fast_zr]
+sigmasf=[sigma_s_thermal_u235,sigma_s_thermal_u238,sigma_s_thermal_o,sigma_s_thermal_h2o]
+MCCF=0
+MCCT=0
+FMMS=0
+FMMSE=0
+for i in range(4):
+    FMMS+=Number_density[i]*sigmasf[i]
+    FMMSE+=Number_density[i]*sigmasf[i]*Eta[i]
+for i in range(5):
+    MCCF+=Number_density[i]*sigmacf[i]
+    MCCT+=Number_density_F[i]*sigmact[i]
+
+# Defining the factors in the four factor formula
+# eeta
+f1=(v_u235*N_U235*sigma_f_thermal_u235)/((N_U235*(sigma_f_thermal_u235+sigma_c_thermal_u235))+(N_U238*sigma_c_thermal_u238))
+# f
+f2=((N_U235*sigma_a_thermal_u235)+(N_U238*sigma_a_thermal_u238)+(N_O*sigma_c_thermal_o))/(MCCT)
+# p
+f3= np.exp(-(2.73 * (FMMS / N_U238) ** (-0.514))/ (FMMSE / FMMS))
+# epsilon
+f4=(1+(0.690*(N_U238/N_h20)))/(1+(0.563*(N_U238/N_h20)))
+# Kinfinity
+Kinf=f1*f2*f3*f4
+"""print("enrichment",(N_U235/N_Uranium)*100)
+print("eeta",f1)
+print("f",f2)
+print("p",f3)
+print("epsilon",f4)
+print("Kinfinity",Kinf)
+"""
+f1t=((v_u235*N_U235*sigma_f_fast_u235)+(v_u238*N_U238*sigma_f_fast_u238))/((N_U235*sigma_a_fast_u235)+(sigma_a_fast_u238*N_U238))
+f2t=((N_U235*sigma_a_fast_u235)+(N_U238*sigma_a_fast_u238))/MCCT
+f3t=1
+f4t=(1+(0.690*(N_U238/N_Na)))/(1+(0.563*(N_U238/N_Na)))
+Kinft=f1t*f2t*f3t*f4t
+print("enrichment",(N_U235/N_Uranium)*100)
+print("eeta",f1t)
+print("f",f2t)
+print("p",f3t)
+print("epsilon",f4t)
+print("Kinfinity",Kinft)
